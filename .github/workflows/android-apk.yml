@@ -32,8 +32,16 @@ jobs:
           distribution: temurin
           java-version: '17'
 
-      - name: Setup Android SDK
-        uses: android-actions/setup-android@v3
+      # GitHub's ubuntu-latest image already includes Android SDK. Avoid
+      # android-actions/setup-android here: its legacy "tools" package request
+      # fails because that package is no longer available in Google's repo.
+      - name: Verify preinstalled Android SDK
+        run: |
+          set -Eeuo pipefail
+          : "${ANDROID_HOME:?ANDROID_HOME is not configured on this runner}"
+          test -d "$ANDROID_HOME/platform-tools"
+          echo "Android SDK: $ANDROID_HOME"
+          ls "$ANDROID_HOME/build-tools" | tail -n 5
 
       # `npm ci` is not usable here: this repo's package-lock.json is missing
       # @emnapi/core and @emnapi/runtime, so npm ci exits EUSAGE ("package.json and
